@@ -5,6 +5,9 @@
 # Change Log: (Who, When, What)
 #   Jeremy Peters, 11/20/2024, Reused code from Assignment06 as base
 #   Jeremy Peters, 11/21/2024, Aligning code to assignment requirements
+#   Jeremy Peters, 11/23/2024, Additional changes to fix JSON iteration
+#   Jeremy Peters, 11/24/2024, Fix to JSON iteration on read & write. Also
+#  added docstrings throughout with some help from genAI.
 # -------------------------------------------------------------------------- #
 import os
 import json
@@ -25,53 +28,177 @@ FILE_NAME: str = "Enrollments.json"
 # Define the Data Variables
 menu_choice: str = str()
 students: list = list()
+file_status: bool = False
+
+class Person:
+    """
+    A class that represents a person.
+
+    Attributes:
+    __first_name (str): The first name of the person.
+    __last_name (str): The last name of the person.
+
+    Methods:
+    __init__(first_name, last_name): Initializes the person with a first
+    and last name.
+    first_name: Gets and sets the first name.
+    last_name: Gets and sets the last name.
+    __str__(): Returns a string representation of the person.
+    """
+    __first_name: str = str()
+    __last_name: str = str()
+
+    def __init__(self, first_name: str, last_name: str):
+        """Initializes the person with a first and last name."""
+        self.__first_name = first_name
+        self.__last_name = last_name
+
+    @property
+    def first_name(self):
+        """Gets the first name."""
+        return self.__first_name.title()
+
+    @first_name.setter
+    def first_name(self, first_name: str):
+        """Sets the first name."""
+        if (not first_name.isalpha()) or first_name == "":
+            raise ValueError(CustomMessage.alpha_only)
+        else:
+            self.__first_name = first_name
+
+    @property
+    def last_name(self):
+        """Gets the last name."""
+        return self.__last_name.title()
+
+    @last_name.setter
+    def last_name(self, last_name: str):
+        """Sets the last name."""
+        if (not last_name.isalpha()) or last_name == "":
+            raise ValueError(CustomMessage.alpha_only)
+        else:
+            self.__last_name = last_name
+
+    def __str__(self):
+        """Returns a string representation of the person."""
+        return f"{self.first_name} {self.last_name}"
+
+
+class Student(Person):
+    """
+    A class that represents a student, inheriting from Person.
+
+    Attributes:
+    __course_name (str): The course name the student is enrolled in.
+
+    Methods:
+    __init__(first_name, last_name, course_name): Initializes the student
+    with a first name, last name, and course name.
+    course_name: Gets and sets the course name.
+    __str__(): Returns a string representation of the student.
+    convert_to_dict(): Converts the student object to a dictionary.
+    from_dict(data): Creates a student object from a dictionary.
+    """
+    __course_name: str = str()
+
+    def __init__(self, first_name: str, last_name: str, course_name: str):
+        """
+        Initializes the student with a first name, last name, and course name.
+        """
+        super().__init__(first_name=first_name, last_name=last_name)
+        self.__course_name = course_name
+
+    @property
+    def course_name(self):
+        """
+        Gets the course name.
+        """
+        return self.__course_name
+
+    @course_name.setter
+    def course_name(self, course_name: str):
+        """
+        Sets the course name.
+        """
+        if course_name == "":
+            raise ValueError(CustomMessage.no_data)
+        else:
+            self.__course_name = course_name
+
+    def __str__(self):
+        """
+        Returns a string representation of the student.
+        """
+        return f"{self.first_name} {self.last_name} {self.course_name}"
+
+    def convert_to_dict(self):
+        """
+        Converts the student object to a dictionary.
+        """
+        return {
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "course_name": self.course_name
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """
+        Creates a student object from a dictionary.
+        """
+        return cls(first_name=data["first_name"], last_name=data["last_name"], course_name=data["course_name"])
+
 
 class CustomMessage:
     """
-    Class for storing reusable messages
+    A class for storing reusable messages.
+
+    Attributes:
+    menu_prompt (str): The menu prompt message.
+    file_exists (str): Message indicating that the file already exists.
+    no_file_create_it (str): Message indicating that no file exists and one will be created.
+    prompt_firstname (str): Prompt message for the first name.
+    prompt_lastname (str): Prompt message for the last name.
+    prompt_coursename (str): Prompt message for the course name.
+    no_data (str): Message indicating no data entered.
+    alpha_only (str): Message indicating name should only contain alphabetic characters.
+    ascii_only (str): Message indicating course name should only contain ASCII characters.
+    valid_choices (str): Message indicating invalid choice.
+    registered_students (str): Message indicating registered students.
+    read_file_error (str): Message indicating error reading file.
     """
-    menu_prompt: str = (Fore.LIGHTYELLOW_EX + f"What would you like to do: " +
-         Style.RESET_ALL)
-    file_exists: str = (Fore.LIGHTYELLOW_EX + f"File {FILE_NAME} already \
-exists. Skipping file creation." + Style.RESET_ALL)
-    no_file_create_it: str = (Fore.LIGHTYELLOW_EX + f"No existing file \
-{FILE_NAME} found. File will be created." + Style.RESET_ALL)
-    prompt_firstname: str = (Fore.LIGHTYELLOW_EX + f"Please enter the \
-student's first name: " + Style.RESET_ALL)
-    prompt_lastname: str = (Fore.LIGHTYELLOW_EX + f"Please enter the \
-student's last name: " + Style.RESET_ALL)
-    prompt_coursename: str = (Fore.LIGHTYELLOW_EX + f"Please enter the course\
- name: " + Style.RESET_ALL)
-    no_data: str = (Fore.LIGHTCYAN_EX + f"You have not entered any data.\n\
-Try starting with starting option 1." + Style.RESET_ALL)
-    alpha_only: str = (Fore.LIGHTCYAN_EX + f"Student name should only contain\
- alphabetic characters." + Style.RESET_ALL)
-    ascii_only: str = (Fore.LIGHTCYAN_EX + f"Course name should only contain \
-ascii characters." + Style.RESET_ALL)
-    valid_choices: str = (Fore.LIGHTCYAN_EX + f"Invalid choice. Please try \
-again." + Style.RESET_ALL)
-    registered_students: str = (Fore.MAGENTA + f"The following students are \
-registered:" + Style.RESET_ALL)
-    read_file_error: str = (Fore.RED + f"Error reading contents of \
-{FILE_NAME}." + Style.RESET_ALL)
+    menu_prompt: str = (Fore.LIGHTYELLOW_EX + f"What would you like to do: " + Style.RESET_ALL)
+    file_exists: str = (Fore.LIGHTYELLOW_EX + f"File {FILE_NAME} already exists. Skipping file creation." + Style.RESET_ALL)
+    no_file_create_it: str = (Fore.LIGHTYELLOW_EX + f"No existing file {FILE_NAME} found. File will be created." + Style.RESET_ALL)
+    prompt_firstname: str = (Fore.LIGHTYELLOW_EX + f"Please enter the student's first name: " + Style.RESET_ALL)
+    prompt_lastname: str = (Fore.LIGHTYELLOW_EX + f"Please enter the student's last name: " + Style.RESET_ALL)
+    prompt_coursename: str = (Fore.LIGHTYELLOW_EX + f"Please enter the course name: " + Style.RESET_ALL)
+    no_data: str = (Fore.LIGHTCYAN_EX + f"You have not entered any data.\nTry starting with starting option 1." + Style.RESET_ALL)
+    alpha_only: str = (Fore.LIGHTCYAN_EX + f"Student name should only contain alphabetic characters." + Style.RESET_ALL)
+    ascii_only: str = (Fore.LIGHTCYAN_EX + f"Course name should only contain ASCII characters." + Style.RESET_ALL)
+    valid_choices: str = (Fore.LIGHTCYAN_EX + f"Invalid choice. Please try again." + Style.RESET_ALL)
+    registered_students: str = (Fore.MAGENTA + f"The following students are registered:" + Style.RESET_ALL)
+    read_file_error: str = (Fore.RED + f"Error reading contents of {FILE_NAME}." + Style.RESET_ALL)
 
 
 class FileProcessor:
     """
-    A collection of functions for processing files
+    A collection of functions for processing files.
+
+    Methods:
+    file_check(): Checks that the file exists, and if it isn't present, it creates an empty file.
+    read_data_from_file(file_name, student_data): Reads data from a file into a list of students.
+    write_data_to_file(file_name, student_data): Writes the list of students to a file.
     """
 
     @staticmethod
     def file_check():
         """
-        Checks that the file exists and if not, creates an empty file.
+        Checks that the file exists, and if it isn't present, it creates an empty file.
         """
-
         try:
-            print(Fore.MAGENTA + f"Checking for existing file {FILE_NAME}..."
-                  + Style.RESET_ALL)
-            if (not os.path.exists(FILE_NAME) or os.path.getsize(FILE_NAME)
-                    == 0):
+            print(Fore.MAGENTA + f"Checking for existing file {FILE_NAME}..." + Style.RESET_ALL)
+            if (not os.path.exists(FILE_NAME)) or (os.path.getsize(FILE_NAME) == 0):
                 print(CustomMessage.no_file_create_it)
                 with open(FILE_NAME, "w") as file:
                     file.write("[]")
@@ -83,37 +210,39 @@ class FileProcessor:
     @staticmethod
     def read_data_from_file(file_name: str, student_data: list):
         """
-        A function to read data from a file
+        Reads data from a file into a list of students.
 
-        :param file_name: name of the file
-        :param student_data: list of students
+        :param file_name: The name of the file.
+        :param student_data: The list of students.
+        :return: The list of students.
         """
+        global file_status
         try:
             with open(file_name, "r") as file:
-                student_data = json.load(file)
-                if isinstance(student_data, list):
-                    students.extend(student_data)
+                data = json.load(file)
+                if isinstance(data, list) and data:
+                    for student_dict in data:
+                        student = Student.from_dict(student_dict)
+                        student_data.append(student)  # Append to student_data
+                    file_status = True
         except Exception as e:
-            IO.output_error_messages(
-                message=CustomMessage.read_file_error, error=e)
+            IO.output_error_messages(message=CustomMessage.read_file_error, error=e)
         return student_data
 
     @staticmethod
     def write_data_to_file(file_name: str, student_data: list):
         """
-        A function to write data to a file
+        Writes the list of students to a file.
 
-        :param file_name: The name of the file
-        :param student_data: The list of students
+        :param file_name: The name of the file.
+        :param student_data: The list of students.
         """
         try:
             with open(file_name, "w") as file:
-                json.dump(student_data, file)
-                print(Fore.LIGHTYELLOW_EX + f"The following was saved to \
-file:" + Style.RESET_ALL)
-                IO.output_student_courses(student_data=students)
-                if student_data == str():
-                    raise ValueError(CustomMessage.no_data)
+                json_data = [student.convert_to_dict() for student in student_data]
+                json.dump(json_data, file)
+                print(Fore.LIGHTYELLOW_EX + f"The following was saved to file:" + Style.RESET_ALL)
+                IO.output_student_courses(student_data=student_data)
         except ValueError as e:
             IO.output_error_messages(e.__str__())
         except Exception as e:
@@ -121,16 +250,23 @@ file:" + Style.RESET_ALL)
 
 class IO:
     """
-    A collection of functions for receiving and storing user data
+    A collection of functions for receiving and storing user data.
+
+    Methods:
+    output_error_messages(message, error): Handles error messages.
+    output_menu(menu): Presents the menu to the user.
+    input_menu_choice(): Handles the user menu input.
+    input_student_data(student_data): Handles user input for student data.
+    output_student_courses(student_data): Prints the student's courses.
     """
 
     @staticmethod
     def output_error_messages(message: str, error: Exception = None):
         """
-        A function that handles error messages
+        Handles error messages.
 
-        :param message: message data passed to the function
-        :param error: Exception data passed to the function
+        :param message: The message data passed to the function.
+        :param error: The exception data passed to the function.
         """
         print(message)
         if error is not None:
@@ -144,15 +280,18 @@ class IO:
     @staticmethod
     def output_menu(menu: str):
         """
-        A function that presents the menu to the user
-        """
+        Presents the menu to the user.
 
+        :param menu: The menu to display.
+        """
         print(Fore.MAGENTA + menu + Style.RESET_ALL)
 
     @staticmethod
     def input_menu_choice():
         """
-        A function that handles the user menu input
+        Handles the user menu input.
+
+        :return: The menu choice selected by the user.
         """
         try:
             choice = input(CustomMessage.menu_prompt)
@@ -166,11 +305,10 @@ class IO:
     @staticmethod
     def input_student_data(student_data: list):
         """
-        A function that handles the user input
+        Handles user input for student data.
 
-        :param student_data: Stores the students list data
+        :param student_data: The list of students.
         """
-
         try:
             while True:
                 try:
@@ -202,57 +340,26 @@ class IO:
                 except ValueError as e:
                     IO.output_error_messages(e.__str__())
 
-            student = {"FirstName": student_first_name,
-                            "LastName": student_last_name,
-                            "CourseName": course_name}
-            students.append(student)
-            print(Fore.MAGENTA + f"You have added {student_first_name} \
-{student_last_name} for course {course_name} to the registration list." \
-+ Style.RESET_ALL)
+            student = Student(student_first_name, student_last_name, course_name)
+            student_data.append(student)
+            print(Fore.MAGENTA + f"You have added {student.first_name} {student.last_name} for course {student.course_name} to the registration list." + Style.RESET_ALL)
         except Exception as e:
-            IO.output_error_messages(message=Fore.RED + f"There was a \
-non-specific error!\n" + Style.RESET_ALL, error=e)
+            IO.output_error_messages(message=Fore.RED + f"There was a non-specific error!\n" + Style.RESET_ALL, error=e)
 
     @staticmethod
     def output_student_courses(student_data: list):
         """
-        A function that prints the student's courses
+        Prints the student's courses.
 
-        :param student_data: Stores the students list data
+        :param student_data: The list of students.
         """
         try:
             if not student_data:
                 raise ValueError(CustomMessage.no_data)
-            for student in students:
-                print(Fore.MAGENTA + f"{student['FirstName']}"
-                      f" {student['LastName']} is enrolled in "
-                      f"{student['CourseName']}" + Style.RESET_ALL)
+            for student in student_data:
+                print(Fore.MAGENTA + f"{student.first_name} {student.last_name} is enrolled in {student.course_name}" + Style.RESET_ALL)
         except ValueError as e:
             IO.output_error_messages(e.__str__())
-
-class Person:
-    """
-    A class that represents a person
-    """
-    __first_name: str
-    __last_name: str
-
-    def __init__(self, first_name: str, last_name: str):
-        self.__first_name = first_name
-        self.__last_name = last_name
-
-
-class Student(Person):
-    """
-    A class that represents a student (super = Person)
-    """
-    __course_name: str
-
-    def __init__(self,course_name: str):
-        super().__init__(first_name=student_first_name,
-                         last_name=student_last_name)
-        self.__course_name = course_name
-
 
 # Check if file exists and if not, create empty file
 FileProcessor.file_check()
@@ -260,7 +367,7 @@ FileProcessor.file_check()
 # Load the students variable with data from JSON, if present
 FileProcessor.read_data_from_file(file_name=FILE_NAME, student_data=students)
 
-while (True):
+while True:
     # Present menu to user
     IO.output_menu(menu=MENU)
     menu_choice = IO.input_menu_choice()
@@ -272,13 +379,19 @@ while (True):
 
     # Present the current data
     elif menu_choice == "2":
-        IO.output_student_courses(students)
+        if students or file_status:
+            IO.output_student_courses(students)
+        else:
+            print(CustomMessage.no_data)
         continue
 
     # Save the data to a file
     elif menu_choice == "3":
-        FileProcessor.write_data_to_file(file_name=FILE_NAME,
-                                         student_data=students)
+        if students or file_status:
+            FileProcessor.write_data_to_file(file_name=FILE_NAME, student_data=students)
+        else:
+            print(CustomMessage.no_data)
+        continue
 
     # Stop the loop and exit the program
     elif menu_choice == "4":
