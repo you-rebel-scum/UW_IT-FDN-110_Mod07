@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------- #
 # Title: Assignment07
-# Desc: This assignment demonstrates using functions with
-# structured error handling
+# Desc: This assignment demonstrates using instance & class methods
+# and the use of version control via GitHub
 # Change Log: (Who, When, What)
 #   Jeremy Peters, 11/20/2024, Reused code from Assignment06 as base
 #   Jeremy Peters, 11/21/2024, Aligning code to assignment requirements
@@ -54,12 +54,12 @@ class Person:
         self.__last_name = last_name
 
     @property
-    def first_name(self):
+    def first_name(self) -> str:
         """Gets the first name."""
         return self.__first_name.title()
 
     @first_name.setter
-    def first_name(self, first_name: str):
+    def first_name(self, first_name: str) -> None:
         """Sets the first name."""
         if (not first_name.isalpha()) or first_name == "":
             raise ValueError(CustomMessage.alpha_only)
@@ -67,12 +67,12 @@ class Person:
             self.__first_name = first_name
 
     @property
-    def last_name(self):
+    def last_name(self) -> str:
         """Gets the last name."""
         return self.__last_name.title()
 
     @last_name.setter
-    def last_name(self, last_name: str):
+    def last_name(self, last_name: str) -> None:
         """Sets the last name."""
         if (not last_name.isalpha()) or last_name == "":
             raise ValueError(CustomMessage.alpha_only)
@@ -109,14 +109,14 @@ class Student(Person):
         self.__course_name = course_name
 
     @property
-    def course_name(self):
+    def course_name(self) -> str:
         """
         Gets the course name.
         """
         return self.__course_name
 
     @course_name.setter
-    def course_name(self, course_name: str):
+    def course_name(self, course_name: str) -> None:
         """
         Sets the course name.
         """
@@ -125,13 +125,13 @@ class Student(Person):
         else:
             self.__course_name = course_name
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns a string representation of the student.
         """
         return f"{self.first_name} {self.last_name} {self.course_name}"
 
-    def convert_to_dict(self):
+    def convert_to_dict(self) -> dict:
         """
         Converts the student object to a dictionary.
         """
@@ -146,8 +146,8 @@ class Student(Person):
         """
         Creates a student object from a dictionary.
         """
-        return cls(first_name=data["first_name"], last_name=data["last_name"], course_name=data["course_name"])
-
+        return cls(first_name=data["first_name"], last_name=data[
+            "last_name"], course_name=data["course_name"])
 
 class CustomMessage:
     """
