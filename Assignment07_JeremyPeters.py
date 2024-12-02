@@ -64,7 +64,7 @@ class Person:
         """
         Gets the first name.
         """
-        return self.__first_name.title().strip()
+        return self.__first_name.title()
 
     @first_name.setter
     def first_name(self, first_name: str) -> None:
@@ -81,7 +81,7 @@ class Person:
         """
         Gets the last name.
         """
-        return self.__last_name.title().strip()
+        return self.__last_name.title()
 
     @last_name.setter
     def last_name(self, last_name: str) -> None:
@@ -129,7 +129,7 @@ class Student(Person):
         """
         Gets the course name.
         """
-        return self.__course_name.title().strip()
+        return self.__course_name
 
     @course_name.setter
     def course_name(self, course_name: str) -> None:
@@ -233,8 +233,8 @@ class FileProcessor:
         it creates an empty file.
         """
         try:
-            print(Fore.MAGENTA + f"Checking for existing file \
-{FILE_NAME}..." + Style.RESET_ALL)
+            print(Fore.MAGENTA + f"Checking for existing \
+file {FILE_NAME}..." + Style.RESET_ALL)
             if (not os.path.exists(FILE_NAME)) or (os.path.getsize(
                     FILE_NAME) == 0):
                 print(CustomMessage.no_file_create_it)
@@ -264,9 +264,8 @@ class FileProcessor:
                         student_data.append(student)
                     file_status = True
         except Exception as e:
-            IO.output_error_messages(
-                message=CustomMessage.read_file_error, error=e
-            )
+            IO.output_error_messages(message=CustomMessage.read_file_error,
+                                    error=e)
         return student_data
 
     @staticmethod
@@ -279,9 +278,8 @@ class FileProcessor:
         """
         try:
             with open(file_name, "w") as file:
-                json_data = [
-                    student.convert_to_dict() for student in student_data
-                ]
+                json_data = [student.convert_to_dict() for student in
+                             student_data]
                 json.dump(json_data, file)
                 print(Fore.LIGHTYELLOW_EX + f"The following was saved \
 to file:" + Style.RESET_ALL)
@@ -358,7 +356,7 @@ class IO:
                     student_first_name = input(CustomMessage.prompt_firstname)
                     if not student_first_name.isalpha():
                         raise ValueError(CustomMessage.alpha_only)
-                    student_first_name = student_first_name
+                    student_first_name = student_first_name.title().strip()
                     break
                 except ValueError as e:
                     IO.output_error_messages(e.__str__())
@@ -368,7 +366,7 @@ class IO:
                     student_last_name = input(CustomMessage.prompt_lastname)
                     if not student_last_name.isalpha():
                         raise ValueError(CustomMessage.alpha_only)
-                    student_last_name = student_last_name
+                    student_last_name = student_last_name.title().strip()
                     break
                 except ValueError as e:
                     IO.output_error_messages(e.__str__())
@@ -378,14 +376,13 @@ class IO:
                     course_name = input(CustomMessage.prompt_coursename)
                     if not course_name.isascii():
                         raise ValueError(CustomMessage.ascii_only)
-                    course_name = course_name
+                    course_name = course_name.title().strip()
                     break
                 except ValueError as e:
                     IO.output_error_messages(e.__str__())
 
-            student = Student(
-                student_first_name, student_last_name, course_name
-            )
+            student = Student(student_first_name, student_last_name,
+                              course_name)
             student_data.append(student)
             print(Fore.MAGENTA + f"You have added {student.first_name} \
 {student.last_name} for course {student.course_name} to the registration \
@@ -409,6 +406,9 @@ non-specific error!\n" + Style.RESET_ALL, error=e)
 {student.last_name} is enrolled in {student.course_name}" + Style.RESET_ALL)
         except ValueError as e:
             IO.output_error_messages(e.__str__())
+
+current_directory = os.getcwd()
+print("Current working directory:", current_directory)
 
 # Check if file exists and if not, create empty file
 FileProcessor.file_check()
@@ -437,9 +437,8 @@ while True:
     # Save the data to a file
     elif menu_choice == "3":
         if students or file_status:
-            FileProcessor.write_data_to_file(
-                file_name=FILE_NAME, student_data=students
-            )
+            FileProcessor.write_data_to_file(file_name=FILE_NAME,
+                                             student_data=students)
         else:
             print(CustomMessage.no_data)
         continue
