@@ -29,9 +29,9 @@ FILE_NAME: str = "Enrollments.json"
 # Define the Data Variables
 menu_choice: str = str()
 students: list = list()
-student_first_name: str = str()
-student_last_name: str = str()
-course_name: str = str()
+# student_first_name: str = str()
+# student_last_name: str = str()
+# course_name: str = str()
 file_status: bool = False
 
 class Person:
@@ -406,9 +406,6 @@ non-specific error!\n" + Style.RESET_ALL, error=e)
 {student.last_name} is enrolled in {student.course_name}" + Style.RESET_ALL)
         except ValueError as e:
             IO.output_error_messages(e.__str__())
-
-current_directory = os.getcwd()
-print("Current working directory:", current_directory)
 
 # Check if file exists and if not, create empty file
 FileProcessor.file_check()
